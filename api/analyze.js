@@ -1,27 +1,34 @@
 // api/analyze.js
-// Vercel Serverless Function
-// Forward request ke Sumopod API dengan model Kimi
+// API key diambil dari Vercel Environment Variables (lebih aman)
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { apiKey, model, messages } = req.body;
+  const { model, messages } = req.body;
 
-  if (!apiKey || !messages) {
-    return res.status(400).json({ error: 'Missing apiKey or messages' });
+  if (!messages) {
+    return res.status(400).json({ error: 'Missing messages' });
+  }
+
+  // Ambil dari Vercel Environment Variables
+  const apiKey = process.env.SUMOPOD_API_KEY;
+  const defaultModel = process.env.SUMOPOD_MODEL || 'kimi-k2.6';
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'API key not configured on server' });
   }
 
   try {
-    const response = await fetch('https://api.sumopod.com/v1/chat/completions', {
+    const response = await fetch('https://ai.sumopod.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: model || 'kimi-k2.6',
+        model: model || defaultModel,
         max_tokens: 4000,
         messages: messages
       })
@@ -29,7 +36,8 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errText = await response.text();
-      return res.status(response.status).json({ error: errText });
+      console.error('Sumopod error:', response.status, errText);
+      return res.status(response.status).json({ error: errText, status: response.status });
     }
 
     const data = await response.json();
