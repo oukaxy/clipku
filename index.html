@@ -288,12 +288,7 @@
     <button class="sheet-close" onclick="closeSheet('sheetSettings')">✕</button>
   </div>
   <div class="sheet-body">
-    <div class="warn-box">API key disimpan di browser kamu (localStorage). Jangan pakai di perangkat orang lain.</div>
-    <div class="form-group">
-      <label class="form-label">Sumopod API Key</label>
-      <input type="password" class="form-input" id="apiKeyInput" placeholder="sk-..."/>
-      <div class="form-hint">Dapatkan di dashboard Sumopod kamu</div>
-    </div>
+    <div class="info-box">API key disimpan aman di server (Vercel). Kamu tidak perlu input key di sini.</div>
     <div class="form-group">
       <label class="form-label">Model</label>
       <select class="form-input" id="modelSelect">
@@ -317,22 +312,17 @@ let debounceTimer = null;
 // ===== SETTINGS =====
 function getSettings() {
   return {
-    apiKey: localStorage.getItem('ck_apikey') || '',
     model: localStorage.getItem('ck_model') || 'kimi-k2.6'
   };
 }
 function saveSettings() {
-  const key = document.getElementById('apiKeyInput').value.trim();
   const model = document.getElementById('modelSelect').value;
-  if (!key) { showToast('Masukkan API key dulu'); return; }
-  localStorage.setItem('ck_apikey', key);
   localStorage.setItem('ck_model', model);
   showToast('Pengaturan tersimpan ✓');
   closeSheet('sheetSettings');
 }
 function openSettings() {
   const s = getSettings();
-  document.getElementById('apiKeyInput').value = s.apiKey;
   document.getElementById('modelSelect').value = s.model;
   openSheet('sheetSettings');
 }
@@ -425,12 +415,7 @@ async function startAnalyze() {
   const vid = extractVideoId(url);
   if (!vid) { showToast('Format URL tidak valid'); return; }
 
-  const { apiKey, model } = getSettings();
-  if (!apiKey) {
-    showToast('Set API key dulu di pengaturan ⚙️');
-    openSettings();
-    return;
-  }
+  const { model } = getSettings();
 
   // Show loading
   document.getElementById('inputArea').style.display = 'none';
@@ -465,7 +450,6 @@ async function startAnalyze() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        apiKey,
         model,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -733,12 +717,7 @@ function formatTime(iso) {
 
 // ===== INIT =====
 function init() {
-  const { apiKey } = getSettings();
-  if (!apiKey) {
-    setTimeout(() => {
-      showToast('Set API key dulu ⚙️');
-    }, 1000);
-  }
+  // Ready
 }
 
 init();
